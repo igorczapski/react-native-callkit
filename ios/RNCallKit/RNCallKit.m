@@ -134,7 +134,7 @@ RCT_EXPORT_METHOD(startCall:(NSString *)uuidString
 
     CXTransaction *transaction = [[CXTransaction alloc] initWithAction:startCallAction];
 
-    [self requestTransaction:transaction];
+    [self requestTransaction:transaction localizedCallerName:contactIdentifier];
 }
 
 RCT_EXPORT_METHOD(endCall:(NSString *)uuidString)
@@ -146,7 +146,7 @@ RCT_EXPORT_METHOD(endCall:(NSString *)uuidString)
     CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:uuid];
     CXTransaction *transaction = [[CXTransaction alloc] initWithAction:endCallAction];
 
-    [self requestTransaction:transaction];
+    [self requestTransaction:transaction localizedCallerName:nil];
 }
 
 RCT_EXPORT_METHOD(endAllCalls)
@@ -157,7 +157,7 @@ RCT_EXPORT_METHOD(endAllCalls)
     for (CXCall *call in self.callKitCallController.callObserver.calls) {
         CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:call.UUID];
         CXTransaction *transaction = [[CXTransaction alloc] initWithAction:endCallAction];
-        [self requestTransaction:transaction];
+        [self requestTransaction:transaction localizedCallerName:nil];
     }
 }
 
@@ -171,7 +171,7 @@ RCT_EXPORT_METHOD(setHeldCall:(NSString *)uuidString onHold:(BOOL)onHold)
     CXTransaction *transaction = [[CXTransaction alloc] init];
     [transaction addAction:setHeldCallAction];
 
-    [self requestTransaction:transaction];
+    [self requestTransaction:transaction localizedCallerName:nil];
 }
 
 RCT_EXPORT_METHOD(_startCallActionEventListenerAdded)
@@ -187,6 +187,7 @@ RCT_EXPORT_METHOD(reportConnectedOutgoingCallWithUUID:(NSString *)uuidString)
 
 
 - (void)requestTransaction:(CXTransaction *)transaction
+       localizedCallerName:(NSString * _Nullable)localizedCallerName
 {
 #ifdef DEBUG
     NSLog(@"[RNCallKit][requestTransaction] transaction = %@", transaction);
@@ -210,6 +211,9 @@ RCT_EXPORT_METHOD(reportConnectedOutgoingCallWithUUID:(NSString *)uuidString)
                 callUpdate.supportsGrouping = NO;
                 callUpdate.supportsUngrouping = NO;
                 callUpdate.hasVideo = NO;
+                if(localizedCallerName != nil){
+                    callUpdate.localizedCallerName = localizedCallerName;
+                }
                 [self.callKitProvider reportCallWithUUID:startCallAction.callUUID updated:callUpdate];
             }
         }
